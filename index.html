@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Register Quiz</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #quiz-area, #result, #leaderboard { display: none; margin-top: 20px; }
+        .correct { color: green; font-weight: bold; }
+        .incorrect { color: red; font-weight: bold; }
+        table { width: 50%; margin: auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <h1>Shift Register Quiz</h1>
+    
+    <label for="email">Enter Email:</label>
+    <input type="email" id="email" required>
+    <button id="start-btn" onclick="startQuiz()">Start Quiz</button>
+    
+    <div id="timer">Time Left: 10:00</div>
+
+    <div id="quiz-area"></div>
+    <button id="submit-btn" onclick="submitQuiz()" style="display: none;">Submit Quiz</button>
+
+    <div id="result"></div>
+
+    <h2>Leaderboard</h2>
+    <table id="leaderboard"></table>
+
+    <script>
+        const questions = [
+            { q: "What is a shift register primarily used for?", a: ["Arithmetic operations", "Storing and shifting data", "Power supply regulation", "Frequency modulation"], correct: 1 },
+            { q: "How many flip-flops are required to store a 4-bit binary number in a shift register?", a: ["2", "4", "6", "8"], correct: 1 },
+            { q: "Which shift register type shifts data in one bit at a time and outputs one bit at a time?", a: ["SISO", "SIPO", "PISO", "PIPO"], correct: 0 },
+            { q: "What is the purpose of asynchronous PRESET (PRE) and CLEAR (CLR) inputs in flip-flops?", a: ["To provide synchronous input", "To modify the output independently of the clock", "To store multiple data values at once", "To disable the flip-flop"], correct: 1 },
+            { q: "In an active LOW asynchronous CLEAR input, setting CLR to 0 will:", a: ["Set the flip-flop", "Reset the flip-flop", "Enable the clock signal", "Shift data to the right"], correct: 1 },
+            { q: "Which shift register type can store 4-bit input data simultaneously and output it simultaneously?", a: ["SISO", "SIPO", "PISO", "PIPO"], correct: 3 },
+            { q: "What is the function of the clock signal in a shift register?", a: ["It synchronizes the shifting of data", "It increases the speed of data transfer", "It holds data permanently", "It converts parallel data into serial form"], correct: 0 },
+            { q: "Shifting data from left to right is also known as:", a: ["Leftward shifting", "Parallel shifting", "Rightward shifting", "Rotational shifting"], correct: 2 },
+            { q: "Which shift register type converts serial input into parallel output?", a: ["SISO", "SIPO", "PISO", "PIPO"], correct: 1 },
+            { q: "Which input method allows multiple bits to be loaded into a shift register at once?", a: ["Serial input", "Parallel input", "Clock input", "Data latch"], correct: 1 },
+            { q: "A 4-bit SIPO shift register initially holds ‘0000’. If the input sequence is ‘1011’, what will be the output after four clock pulses?", a: ["0000", "1011", "1101", "0110"], correct: 1 },
+            { q: "A 4-bit PISO shift register is loaded with ‘1101’. If the serial output is read bit by bit, what is the sequence observed?", a: ["1101", "1011", "0110", "1110"], correct: 0 },
+            { q: "If a 4-bit SISO shift register is initialized with ‘1001’ and shifts right once, what is the new stored value?", a: ["1100", "0100", "0010", "0001"], correct: 1 },
+            { q: "A shift register receives a clock pulse every 5 milliseconds. How long will it take to completely shift out a 4-bit value in a SISO shift register?", a: ["5 ms", "10 ms", "20 ms", "40 ms"], correct: 2 },
+            { q: "If a PIPO shift register is provided with a 4-bit parallel input ‘1010’, what will be the output after one clock pulse?", a: ["1010", "0101", "1100", "0000"], correct: 0 }
+        ];
+
+        let timer = 600; // 10 minutes
+        let quizStartTime;
+        let email = "";
+
+        function startQuiz() {
+            email = document.getElementById("email").value.trim();
+            if (!email) {
+                alert("🚨 Please enter your email before starting the quiz.");
+                return;
+            }
+
+            quizStartTime = new Date().getTime();
+            document.getElementById("quiz-area").style.display = "block";
+            document.getElementById("submit-btn").style.display = "block";
+
+            let quizHTML = "";
+            questions.forEach((q, index) => {
+                quizHTML += `<p>${q.q}</p>`;
+                q.a.forEach((option, i) => {
+                    quizHTML += `<input type="radio" name="q${index}" value="${i}"> ${option}<br>`;
+                });
+            });
+
+            document.getElementById("quiz-area").innerHTML = quizHTML;
+            console.log("✅ Quiz Started!");
+
+            clearInterval(updateTimer);
+            setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            if (timer > 0) {
+                timer--;
+                document.getElementById("timer").innerText = `Time Left: ${Math.floor(timer / 60)}:${timer % 60}`;
+            } else {
+                alert("Time's up! Submitting quiz...");
+                submitQuiz();
+            }
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            let resultHTML = "<h2>Your Score:</h2><ul>";
+
+            questions.forEach((q, index) => {
+                let selected = document.querySelector(`input[name="q${index}"]:checked`);
+                let userChoice = selected ? parseInt(selected.value) : -1;
+
+                let feedback = (userChoice === q.correct)
+                    ? `<span class="correct">✔ Correct!</span>`
+                    : `<span class="incorrect">✘ Incorrect! The correct answer is <strong>${q.a[q.correct]}</strong>.</span>`;
+
+                if (userChoice === q.correct) score++;
+
+                resultHTML += `<li>${q.q} <br> Your answer: <strong>${selected ? q.a[userChoice] : "Not Attempted"}</strong> - ${feedback}</li>`;
+            });
+
+            resultHTML += `</ul><h2>Total Score: ${score} / 15</h2>`;
+            document.getElementById("result").innerHTML = resultHTML;
+            document.getElementById("result").style.display = "block";
+        }
+
+        window.onload = () => { document.getElementById("leaderboard").style.display = "none"; };
+    </script>
+</body>
+</html>
